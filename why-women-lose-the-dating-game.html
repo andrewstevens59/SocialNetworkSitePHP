@@ -1,0 +1,27 @@
+<html>
+ <head>
+  <title>
+     showModalDialog method example
+  </title>
+  <script language="JavaScript">
+   function showModalWindow()
+   {
+     window.showModalDialog("ModalPage.html",
+           "Sample.jpg","resizable: yes");
+   }
+  </script>
+ </head>
+<body>
+ <div style="background: #ff9900; width:'100%';" 
+   align="center">
+  <font color="#0000ff" size="12pt">
+	<b>showModalDialog() Example</b>
+  </font>
+ </div>
+ <center>
+  <u><p>Click on the image to view full image</p></u>
+  <a href="javascript: showModalWindow();">
+  <img src="Sample.jpg" width="50" height="50" /></a>
+ </center>
+ </body>
+</html>

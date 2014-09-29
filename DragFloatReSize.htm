@@ -1,0 +1,659 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+
+<html>
+<head>
+<title>Drag, Float or ReSize</title>
+
+<SCRIPT language=JavaScript type=text/javascript>
+<!--
+UpdateJS=0;
+   day='10'; month='12'; year='2004';     // Date Updated
+   Pday='25'; Pmonth='11'; Pyear='2004'; // Date Posted
+UpDateDate='10-12-2004';
+//-->
+</SCRIPT>
+
+<SCRIPT language=JavaScript src="../Update.js" type=text/javascript>
+<!--
+<!---->
+</SCRIPT>
+
+<STYLE>
+BODY {
+	SCROLLBAR-FACE-COLOR: #ecd6a6; SCROLLBAR-HIGHLIGHT-COLOR: silver; SCROLLBAR-SHADOW-COLOR: #d8ad49; SCROLLBAR-ARROW-COLOR: #af9538; SCROLLBAR-BASE-COLOR: #e9d096; scrollbar-3d-light-color: #FFFFFF; scrollbar-dark-shadow-color: #80FF00
+}
+.genTxt {font-size:12px; }
+.genBut {width:65px;height:18px;font-size:10px;cursor:hand; }
+.title { position:absolute;color:gray;font-size:40px;font-weight:bold;font-family:times, Times New Roman, serif; }
+.title1 { position:relative;color:black;font-size:22px;font-weight:normal;font-family:times, Times New Roman, serif; }
+.title2 { position:relative;color:black;font-size:18px;font-weight:normal;font-family:times, Times New Roman, serif; }
+.but { position:relative;top:0px;left:0px;FONT-SIZE:12px;WIDTH:100px;CURSOR:hand;HEIGHT:18px;BACKGROUND-COLOR:#ffe992; }
+</style>
+
+<script language="JavaScript" type="text/javascript">
+<!--
+// Drag, Float or Resize dfrsPart1 (25-11-2004)
+// by Vic Phillips http://www.vicsJavaScripts.org.uk
+
+// Application Notes and Customising Variable
+
+// This script allows any element
+// to be moved by mousedown and dragging the center of the element
+// or resized by mousedown and dragging the edge
+//
+// On initialisation the positioning of the effected elements
+// is changed to 'absolute' but the physical position will not change.
+
+// To initalise the Script
+// insert  onload="javascript:dfrsInitialise();"  in the <body> tag.
+//
+// to allow an element to be moved:   insert attribute  dfrsdrag="yes"   in the opening tag.
+// to allow an element to be dragged: insert attribute  dfrsresize="yes" in the opening tag.
+// to allow an element to float:      insert attribute  dfrsfloat="yes" in the opening tag.
+
+// to turn float off
+// give the element an id, say 'MyId'
+// and execute document.getElementById('MyId').dfrsfloat='no';
+// to turn float on again
+// execute document.getElementById('MyId').dfrsfloat='yes';
+
+// Tested with IE6, NS7, and Mozilla FoxFire.
+
+
+// Customise
+var dfrsEdge=10;  // The element edge to trigger resize
+var dfrsZIndex=0; // The base z-Index of the effected elements
+
+
+//-->
+</script>
+
+<script language="JavaScript" type="text/javascript">
+<!--
+// Drag, Float or Resize dfrsPart2 (25-11-2004)
+// by Vic Phillips http://www.vicsJavaScripts.org.uk
+
+// Functional Code
+
+// Do NOT Change
+var dfrsFOld=0;
+var dfrsMseX=null;
+var dfrsMseY=null;
+var dfrsMd='';
+var dfrsP=0;
+var dfrsObjAry=new Array();
+var dfrsFloatAry=new Array();
+
+function dfrsInitialise(){
+ if (navigator.userAgent.toLowerCase().indexOf('opera')>-1){ return; }
+ dfrsEl=document.getElementsByTagName('*');
+ for (dfrs0=0;dfrs0<dfrsEl.length;dfrs0++){
+  if (dfrsEl[dfrs0].getAttribute('dfrsdrag')||dfrsEl[dfrs0].getAttribute('dfrsresize')){
+   dfrsy=dfrsTop(dfrsEl[dfrs0]);dfrsx=dfrsLeft(dfrsEl[dfrs0])
+   dfrsEl[dfrs0].style.position='absolute';
+   dfrsEl[dfrs0].style.left=dfrsx+'px';
+   dfrsEl[dfrs0].style.top=dfrsy+'px';
+   dfrsEl[dfrs0].style.zIndex=dfrsZIndex;
+   dfrsEl[dfrs0].onmousedown=function(event) { dfrsMseDown(event,this);}
+   dfrsObjAry[dfrsObjAry.length]=dfrsEl[dfrs0];
+   if (dfrsEl[dfrs0].getAttribute('dfrsdrag')){dfrsEl[dfrs0].dfrsdrag='yes'; }
+   if (dfrsEl[dfrs0].getAttribute('dfrsresize')){dfrsEl[dfrs0].dfrsresize='yes'; }
+  }
+  if (dfrsEl[dfrs0].getAttribute('dfrsfloat')){
+   dfrsFloatAry[dfrsFloatAry.length]=dfrsEl[dfrs0];
+   dfrsEl[dfrs0].style.zIndex=dfrsZIndex+1;
+   dfrsEl[dfrs0].dfrsfloat='yes';
+  }
+ }
+ if (dfrsFloatAry.length>0){ setInterval('dfrsFloatDo()',100); }
+}
+
+function dfrsMseDown(event,obj) {
+ document.onmousemove=function(event) {dfrsDoIt(event);}
+ document.onmouseup=function(event) {dfrsMseUp(event);}
+ dfrsMd='';
+ dfrsObj=obj;
+ dfrsMse(event);
+ dfrsPadding(dfrsObj);
+ for (i=0;i<dfrsObjAry.length;i++){ dfrsObjAry[i].style.zIndex=dfrsZIndex; }
+ dfrsObj.style.zIndex=dfrsZIndex+1;
+ dfrsObjW=dfrsWidth(dfrsObj); dfrsObjL=dfrsLeft(dfrsObj); dfrsObjH=dfrsHeight(dfrsObj); dfrsObjT=dfrsTop(dfrsObj);
+ if (dfrsObj.dfrsresize&&dfrsLeft(dfrsObj)+dfrsWidth(dfrsObj)-dfrsEdge<dfrsMseX)     { dfrsMd='R'; }
+ else if (dfrsObj.dfrsresize&&dfrsMseX<dfrsLeft(dfrsObj)+dfrsEdge)                   { dfrsMd='L'; }
+ else if (dfrsObj.dfrsresize&&dfrsTop(dfrsObj)+dfrsHeight(dfrsObj)-dfrsEdge<dfrsMseY){ dfrsMd='B'; }
+ else if (dfrsObj.dfrsresize&&dfrsMseY<dfrsTop(dfrsObj)+dfrsEdge)                    { dfrsMd='T'; }
+ else if (dfrsObj.dfrsdrag){ dfrsDragX=dfrsMseX-dfrsObj.offsetLeft; dfrsDragY=dfrsMseY-dfrsObj.offsetTop; dfrsMd='D'; }
+}
+
+function dfrsRSRight(dfrs){
+ if (parseInt(dfrsObj.style.width)<dfrsEdge*2){ dfrsObj.style.width=(dfrsEdge*2+5)+'px'; dfrsMd=''; return; }
+ dfrsObj.style.width=(dfrs-dfrsLeft(dfrsObj)-dfrsP)+'px';
+}
+
+function dfrsRSBottom(dfrs){
+ if (parseInt(dfrsObj.style.height)<dfrsEdge*2){ dfrsObj.style.height=(dfrsEdge*2+5)+'px'; dfrsMd=''; return; }
+ dfrsObj.style.height=(dfrs-dfrsTop(dfrsObj)-dfrsP)+'px';
+}
+
+function dfrsRSLeft(dfrs){
+ if (parseInt(dfrsObj.style.width)<dfrsEdge*2){ dfrsObj.style.width=(dfrsEdge*2+5)+'px'; dfrsMd=''; return; }
+ dfrsObj.style.width=(dfrsObjW+(dfrsObjL-dfrs-dfrsP))+'px';
+ dfrsObj.style.left=(dfrs)+'px';
+}
+
+function dfrsRSTop(dfrs){
+ if (parseInt(dfrsObj.style.height)<dfrsEdge*2){ dfrsObj.style.height=(dfrsEdge*2+5)+'px'; dfrsMd=''; return; }
+ dfrsObj.style.height=(dfrsObjH+(dfrsObjT-dfrs-dfrsP))+'px';
+ dfrsObj.style.top=(dfrs)+'px';
+}
+
+function dfrsDoIt(event) {
+ if (dfrsMd==''){ return; }
+ dfrsMse(event);
+ if(dfrsMseY==null) dfrsMseY=event.clientY;
+ if(dfrsMd=='R') { dfrsRSRight(dfrsMseX); }
+ if(dfrsMd=='L') { dfrsRSLeft(dfrsMseX); }
+ if(dfrsMd=='B') { dfrsRSBottom(dfrsMseY); }
+ if(dfrsMd=='T') { dfrsRSTop(dfrsMseY); }
+ if(dfrsMd=='D') { dfrsObj.style.left=(dfrsMseX-dfrsDragX)+'px'; dfrsObj.style.top=(dfrsMseY-dfrsDragY)+'px'; }
+}
+
+function dfrsMse(event){
+ if(!event) var event=window.event;
+ if (document.all){ dfrsMseX=event.clientX; dfrsMseY=event.clientY+dfrsSTop(); }
+ else {dfrsMseX=event.pageX; dfrsMseY=event.pageY; }
+}
+
+function dfrsMseUp(event) {
+ document.onmousemove=null; dfrsMd=''; dfrsDragX=-1;  dfrsDragY=-1; dfrsObj.style.zIndex=dfrsZIndex;
+}
+
+function dfrsFloatDo(){
+ if (dfrsFOld!=dfrsSTop()){
+  for (dfrs0=0;dfrs0<dfrsFloatAry.length;dfrs0++){
+   if (dfrsFloatAry[dfrs0].dfrsfloat=='yes'){
+    dfrsFloatAry[dfrs0].style.top=(dfrsTop(dfrsFloatAry[dfrs0])+dfrsSTop()-dfrsFOld)+'px';
+   }
+  }
+  dfrsFOld=dfrsSTop();
+ }
+}
+
+// Utilities
+function dfrsLeft(dfrs){
+ siObjLeft=dfrs.offsetLeft;
+ while(dfrs.offsetParent!=null){
+  siObjParent=dfrs.offsetParent;
+  siObjLeft+=siObjParent.offsetLeft;
+  dfrs=siObjParent;
+ }
+ return siObjLeft;
+}
+
+function dfrsTop(dfrs){
+ siObjTop=dfrs.offsetTop;
+ while(dfrs.offsetParent!=null){
+  siObjParent=dfrs.offsetParent;
+  siObjTop+=siObjParent.offsetTop;
+  dfrs=siObjParent;
+ }
+ return siObjTop;
+}
+
+function dfrsPadding(dfrs){
+ dfrsP=0;
+ if (!document.all){
+  dfrsP=dfrs.style.padding.split('px')[0]*2;
+ }
+}
+
+function dfrsWidth(dfrs) {
+ if (dfrs.offsetWidth){ return dfrs.offsetWidth; }
+ return (null);
+}
+
+function dfrsHeight(dfrs) {
+ if (dfrs.offsetHeight){ return dfrs.offsetHeight; }
+ return (null);
+}
+
+function dfrsSTop() {
+ if (window.pageYOffset!= null){
+  return window.pageYOffset;
+ }
+ if (document.body.scrollWidth!= null){
+  if (document.body.scrollTop){
+   return document.body.scrollTop;
+  }
+  return document.documentElement.scrollTop;
+ }
+ return (null);
+}
+
+//-->
+</script>
+
+
+<script language="JavaScript" src="../sftPart3.js" type="text/javascript"></script>
+
+</HEAD>
+
+
+
+<body bgColor="#f8cd76"  onload="javascript:dfrsInitialise();sftInitPage();" >
+
+
+<script language="JavaScript" type="text/javascript">
+<!--
+
+// Code Generated with:
+// Drop & Slide Menu Generator (07/11/2003)
+// by Vic Phillips
+// http://homepage.ntlworld.com/vwphillips/
+
+// Drop & Slide Menu Part 1
+
+// Edit to new date when required ;
+var DSPageUpDate=UpDateDate;
+
+var DSMenuLayer=100; // Menu Layer
+var DSMenuX=10; // Position from Left of Screen
+var DSMenuY=10; // Position from Top of Screen
+var DSImagePath='../DSMenu/Images/'; // Directory Path for Button Image Files
+
+<!---->
+</script>
+
+<script language="JavaScript" src="../DSMenuPart2.js">
+<!--
+
+<!---->
+</script>
+
+<script language="JavaScript" src="../DSMenuPart3.js">
+<!--
+
+<!---->
+</script>
+
+<script>
+title='Drag Float or ReSize';
+titleY=50;
+titleX=170;
+center=200;
+
+if (document.all){ center=Math.round(document.body.clientWidth/2); }
+ else if (document.getElementById){ center=Math.round(window.innerWidth/2); }
+
+
+</script>
+
+<script>
+document.write(
+'<div class="title" style="top:'+(titleY-1)+'px;left:'+(center-titleX-2)+'px;color:gray;" >'+title+'</div>',
+'<div class="title" style="top:'+(titleY+1)+'px;left:'+(center-titleX+2)+'px;color:black;" >'+title+'</div>',
+'<div class="title" style="top:'+(titleY)+'px;left:'+(center-titleX)+'px;color:red;" >'+title+'</div>',
+'');
+
+</script>
+
+<CENTER>
+<B><FONT size=+2>JavaScript Code for</FONT></B>
+<BR>
+<br>
+<br>
+<br>
+<SCRIPT language=JavaScript type=text/javascript>
+<!--
+
+if (UpdateJS){
+ UpdateDate();
+}
+else {
+ document.write('Off Line Version');
+}
+
+<!---->
+</SCRIPT>
+<BR>
+<BR>
+<B><FONT size=+2>By Vic Phillips</FONT></B>&nbsp;&nbsp;&nbsp; <A href="http://homepage.ntlworld.com/vwphillips/"></font>
+<FONT size=+1>http://www.VicsJavaScripts.org.uk</FONT></A>
+
+</CENTER>
+
+
+<center>
+<br>
+<span class="title1" >
+Application Notes
+</span>
+<br>
+<br>
+This script allows any element<br>
+to be moved by mousedown and dragging the center of the element,<br>
+float as the page is scrolled up or down<br>
+or resized by mousedown and dragging the edge<br>
+<br>
+On initialization the elements positioning is changed to absolute<br>
+but the physical position will appear the same.<br>
+<br>
+<div id="MyId" dfrsfloat="yes" dfrsdrag="yes" style="position:absolute;left:300px;top:400px;width:180px;height:100px;background-color:yellow;padding:15px;font-size=12px;text-align:center;border:solid black 1px;" >
+This element cannot be resized<br>
+<br>
+but can Float and be ReSized
+</div>
+<img dfrsresize="yes" dfrsdrag="yes" src="http://www.vicsjavascripts.org.uk/StdImages/One.gif" border="1" width="150" height="150" style="position:absolute;left:570px;top:380px;" >
+<br>
+<center>
+<div dfrsresize="yes" style="width:200px;height:100px;background-color:red;padding:15px;text-align:center;border:solid black 1px;font-size:12px;" >
+This element cannot be moved<br>
+Padding is set to 15px
+</div>
+</center>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+The Red element has 'relative' positioning,The Image and Yellow element 'absolute'.<br>
+Image 1 can be resized or moved.<br>
+The Yellow element can be moved and can float. Turn Off & On <input type="checkbox" id="DemoCB" checked="checked" onclick="javascript:FloatOnOff();" >
+
+<script language="JavaScript" type="text/javascript">
+<!--
+// Demo Only
+function FloatOnOff(){
+ if (document.getElementById('MyId').dfrsfloat=='yes'){
+  document.getElementById('MyId').dfrsfloat='no';
+ }
+ else {
+  document.getElementById('MyId').dfrsfloat='yes';
+ }
+}
+
+//-->
+</script>
+
+<br>
+The Red element can only be resized.<br>
+The Resize Edge has been set to 5px.<br>
+<br>
+Image 1 has attributes  <i>dfrsresize="yes"</i> and <i>dfrsdrag="yes"</i> in the opening tag.<br>
+The Yellow element has attribute  <i>dfrsdrag="yes"</i> in the opening tag.<br>
+The Red element has attribute  <i>dfrsresize="yes"</i> in the opening tag.<br>
+<br>
+An element border may cause minor resizing distortion in certain browsers<br>
+as the normal border size has not been considered significant in this application.<br>
+<br>
+The code accommodates for the different application of style 'padding' in the specified browsers.<br>
+<br>
+<span class="title1" >
+The Script
+</span>
+<br>
+<textarea id="textArea" rows="30" cols="100" wrap="off" style="position:relative;top:0px;font-size:12px;text-align:center:left;padding:5px;background-color:#FFCC66;">
+
+&lt;script language="JavaScript" type="text/javascript">
+&lt;!--
+// Drag, Float or Resize dfrsPart1 (10-12-2004)
+// by Vic Phillips http://www.vicsJavaScripts.org.uk
+
+// Application Notes and Customising Variable
+
+// This script allows any element
+// to be moved by mousedown and dragging the center of the element
+// or resized by mousedown and dragging the edge
+//
+// On initialisation the positioning of the effected elements
+// is changed to 'absolute' but the physical position will not change.
+
+// To initalise the Script
+// insert  onload="javascript:dfrsInitialise();"  in the &lt;body> tag.
+//
+// to allow an element to be moved:   insert attribute  dfrsdrag="yes"   in the opening tag.
+// to allow an element to be dragged: insert attribute  dfrsresize="yes" in the opening tag.
+// to allow an element to float:      insert attribute  dfrsfloat="yes" in the opening tag.
+
+// to turn float off
+// give the element an id, say 'MyId'
+// and execute document.getElementById('MyId').dfrsfloat='no';
+// to turn float on again
+// execute document.getElementById('MyId').dfrsfloat='yes';
+
+// Tested with IE6, NS7, and Mozilla FoxFire.
+
+
+// Customise
+var dfrsEdge=10;  // The element edge to trigger resize
+var dfrsZIndex=0; // The base z-Index of the effected elements
+
+
+//-->
+&lt;/script>
+
+&lt;script language="JavaScript" type="text/javascript">
+&lt;!--
+// Drag, Float or Resize dfrsPart2 (25-11-2004)
+// by Vic Phillips http://www.vicsJavaScripts.org.uk
+
+// Functional Code
+
+// Do NOT Change
+var dfrsFOld=0;
+var dfrsMseX=null;
+var dfrsMseY=null;
+var dfrsMd='';
+var dfrsP=0;
+var dfrsObjAry=new Array();
+var dfrsFloatAry=new Array();
+
+function dfrsInitialise(){
+ if (navigator.userAgent.toLowerCase().indexOf('opera')>-1){ return; }
+ dfrsEl=document.getElementsByTagName('*');
+ for (dfrs0=0;dfrs0&lt;dfrsEl.length;dfrs0++){
+  if (dfrsEl[dfrs0].getAttribute('dfrsdrag')||dfrsEl[dfrs0].getAttribute('dfrsresize')){
+   dfrsy=dfrsTop(dfrsEl[dfrs0]);dfrsx=dfrsLeft(dfrsEl[dfrs0])
+   dfrsEl[dfrs0].style.position='absolute';
+   dfrsEl[dfrs0].style.left=dfrsx+'px';
+   dfrsEl[dfrs0].style.top=dfrsy+'px';
+   dfrsEl[dfrs0].style.zIndex=dfrsZIndex;
+   dfrsEl[dfrs0].onmousedown=function(event) { dfrsMseDown(event,this);}
+   dfrsObjAry[dfrsObjAry.length]=dfrsEl[dfrs0];
+   if (dfrsEl[dfrs0].getAttribute('dfrsdrag')){dfrsEl[dfrs0].dfrsdrag='yes'; }
+   if (dfrsEl[dfrs0].getAttribute('dfrsresize')){dfrsEl[dfrs0].dfrsresize='yes'; }
+  }
+  if (dfrsEl[dfrs0].getAttribute('dfrsfloat')){
+   dfrsFloatAry[dfrsFloatAry.length]=dfrsEl[dfrs0];
+   dfrsEl[dfrs0].style.zIndex=dfrsZIndex+1;
+   dfrsEl[dfrs0].dfrsfloat='yes';
+  }
+ }
+ if (dfrsFloatAry.length>0){ setInterval('dfrsFloatDo()',100); }
+}
+
+function dfrsMseDown(event,obj) {
+ document.onmousemove=function(event) {dfrsDoIt(event);}
+ document.onmouseup=function(event) {dfrsMseUp(event);}
+ dfrsMd='';
+ dfrsObj=obj;
+ dfrsMse(event);
+ dfrsPadding(dfrsObj);
+ for (i=0;i&lt;dfrsObjAry.length;i++){ dfrsObjAry[i].style.zIndex=dfrsZIndex; }
+ dfrsObj.style.zIndex=dfrsZIndex+1;
+ dfrsObjW=dfrsWidth(dfrsObj); dfrsObjL=dfrsLeft(dfrsObj); dfrsObjH=dfrsHeight(dfrsObj); dfrsObjT=dfrsTop(dfrsObj);
+ if (dfrsObj.dfrsresize&&dfrsLeft(dfrsObj)+dfrsWidth(dfrsObj)-dfrsEdge&lt;dfrsMseX)     { dfrsMd='R'; }
+ else if (dfrsObj.dfrsresize&&dfrsMseX&lt;dfrsLeft(dfrsObj)+dfrsEdge)                   { dfrsMd='L'; }
+ else if (dfrsObj.dfrsresize&&dfrsTop(dfrsObj)+dfrsHeight(dfrsObj)-dfrsEdge&lt;dfrsMseY){ dfrsMd='B'; }
+ else if (dfrsObj.dfrsresize&&dfrsMseY&lt;dfrsTop(dfrsObj)+dfrsEdge)                    { dfrsMd='T'; }
+ else if (dfrsObj.dfrsdrag){ dfrsDragX=dfrsMseX-dfrsObj.offsetLeft; dfrsDragY=dfrsMseY-dfrsObj.offsetTop; dfrsMd='D'; }
+}
+
+function dfrsRSRight(dfrs){
+ if (parseInt(dfrsObj.style.width)&lt;dfrsEdge*2){ dfrsObj.style.width=(dfrsEdge*2+5)+'px'; dfrsMd=''; return; }
+ dfrsObj.style.width=(dfrs-dfrsLeft(dfrsObj)-dfrsP)+'px';
+}
+
+function dfrsRSBottom(dfrs){
+ if (parseInt(dfrsObj.style.height)&lt;dfrsEdge*2){ dfrsObj.style.height=(dfrsEdge*2+5)+'px'; dfrsMd=''; return; }
+ dfrsObj.style.height=(dfrs-dfrsTop(dfrsObj)-dfrsP)+'px';
+}
+
+function dfrsRSLeft(dfrs){
+ if (parseInt(dfrsObj.style.width)&lt;dfrsEdge*2){ dfrsObj.style.width=(dfrsEdge*2+5)+'px'; dfrsMd=''; return; }
+ dfrsObj.style.width=(dfrsObjW+(dfrsObjL-dfrs-dfrsP))+'px';
+ dfrsObj.style.left=(dfrs)+'px';
+}
+
+function dfrsRSTop(dfrs){
+ if (parseInt(dfrsObj.style.height)&lt;dfrsEdge*2){ dfrsObj.style.height=(dfrsEdge*2+5)+'px'; dfrsMd=''; return; }
+ dfrsObj.style.height=(dfrsObjH+(dfrsObjT-dfrs-dfrsP))+'px';
+ dfrsObj.style.top=(dfrs)+'px';
+}
+
+function dfrsDoIt(event) {
+ if (dfrsMd==''){ return; }
+ dfrsMse(event);
+ if(dfrsMseY==null) dfrsMseY=event.clientY;
+ if(dfrsMd=='R') { dfrsRSRight(dfrsMseX); }
+ if(dfrsMd=='L') { dfrsRSLeft(dfrsMseX); }
+ if(dfrsMd=='B') { dfrsRSBottom(dfrsMseY); }
+ if(dfrsMd=='T') { dfrsRSTop(dfrsMseY); }
+ if(dfrsMd=='D') { dfrsObj.style.left=(dfrsMseX-dfrsDragX)+'px'; dfrsObj.style.top=(dfrsMseY-dfrsDragY)+'px'; }
+}
+
+function dfrsMse(event){
+ if(!event) var event=window.event;
+ if (document.all){ dfrsMseX=event.clientX; dfrsMseY=event.clientY; }
+ else {dfrsMseX=event.pageX; dfrsMseY=event.pageY; }
+}
+
+function dfrsMseUp(event) {
+ document.onmousemove=null; dfrsMd=''; dfrsDragX=-1;  dfrsDragY=-1; dfrsObj.style.zIndex=dfrsZIndex;
+}
+
+function dfrsFloatDo(){
+ if (dfrsFOld!=dfrsSTop()){
+  for (dfrs0=0;dfrs0&lt;dfrsFloatAry.length;dfrs0++){
+   if (dfrsFloatAry[dfrs0].dfrsfloat=='yes'){
+    dfrsFloatAry[dfrs0].style.top=(dfrsTop(dfrsFloatAry[dfrs0])+dfrsSTop()-dfrsFOld)+'px';
+   }
+  }
+  dfrsFOld=dfrsSTop();
+ }
+}
+
+// Utilities
+function dfrsLeft(dfrs){
+ siObjLeft=dfrs.offsetLeft;
+ while(dfrs.offsetParent!=null){
+  siObjParent=dfrs.offsetParent;
+  siObjLeft+=siObjParent.offsetLeft;
+  dfrs=siObjParent;
+ }
+ return siObjLeft;
+}
+
+function dfrsTop(dfrs){
+ siObjTop=dfrs.offsetTop;
+ while(dfrs.offsetParent!=null){
+  siObjParent=dfrs.offsetParent;
+  siObjTop+=siObjParent.offsetTop;
+  dfrs=siObjParent;
+ }
+ return siObjTop;
+}
+
+function dfrsPadding(dfrs){
+ dfrsP=0;
+ if (!document.all){
+  dfrsP=dfrs.style.padding.split('px')[0]*2;
+ }
+}
+
+function dfrsWidth(dfrs) {
+ if (dfrs.offsetWidth){ return dfrs.offsetWidth; }
+ return (null);
+}
+
+function dfrsHeight(dfrs) {
+ if (dfrs.offsetHeight){ return dfrs.offsetHeight; }
+ return (null);
+}
+
+function dfrsSTop() {
+ if (window.pageYOffset!= null){
+  return window.pageYOffset;
+ }
+ if (document.body.scrollWidth!= null){
+  return document.body.scrollTop;
+ }
+ return (null);
+}
+
+//-->
+&lt;/script>
+
+
+
+</textarea>
+<br>
+<br>
+<span class="title1" >
+The Code
+</span>
+<br>
+<br>
+The Code is in Two Parts<br>
+drsPart1 - Application Notes and Customising Variable<br>
+drsPart2 - Functional Code (about 5K)<br>
+<br>
+drsPart2 is best as an External JavaScript<br>
+<br>
+All variable, function etc names are prefixed with 'dfrs'<br>
+to minimise conflicts with other JavaScripts<br>
+<br>
+<br>
+<span class="title2" >
+Tested with IE6, NS7, and Mozilla FoxFire.
+</span>
+
+<br>
+<br>
+<INPUT type=button value="DownLoad DragFloatReSize.zip"
+ style="position:relative;top:0px;left:0px;FONT-SIZE:12px;WIDTH:200px;CURSOR:hand;HEIGHT:18px;BACKGROUND-COLOR:#ffe992"
+ onclick="javascript:window.top.location='DragFloatReSize.zip';" >
+<br>
+<br>
+
+</center>
+
+<script language="JavaScript" type="text/javascript">
+<!--
+// Demo Only
+
+function gEBId(id){
+ return document.getElementById(id);
+}
+
+var ireBrow=navigator.userAgent.toLowerCase();
+
+if ((document.all&&ireBrow.indexOf('msie 5')!=-1)){
+ alert('MSIE 5 does not support dom commands used by this script\n\nUpgrade to Mozilla FoxFire ASAP');
+}
+
+if (ireBrow.indexOf('opera')!=-1){
+ alert('Opera does not support dom commands used by this script\n\nUpgrade to Mozilla FoxFire ASAP');
+}
+
+//-->
+</script>
+
+
+</body>
+</html>

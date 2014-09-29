@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Facebook Dropdown</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		$(".dropdown dt a").click(function() {
+
+		        // Change the behaviour of onclick states for links within the menu.
+			var toggleId = "#" + this.id.replace(/^link/,"ul");
+
+		        // Hides all other menus depending on JQuery id assigned to them
+			$(".dropdown dd ul").not(toggleId).hide();
+
+		        //Only toggles the menu we want since the menu could be showing and we want to hide it.
+			$(toggleId).toggle();
+
+		        //Change the css class on the menu header to show the selected class.
+			if($(toggleId).css("display") == "none"){
+				$(this).removeClass("selected");
+			}else{
+				$(this).addClass("selected");
+			}
+
+		});
+
+		$(".dropdown dd ul li a").click(function() {
+
+		    // This is the default behaviour for all links within the menus
+		    var text = $(this).html();
+		    $(".dropdown dt a span").html(text);
+		    $(".dropdown dd ul").hide();
+		});
+
+		$(document).bind('click', function(e) {
+
+		    // Lets hide the menu when the page is clicked anywhere but the menu.
+		    var $clicked = $(e.target);
+		    if (! $clicked.parents().hasClass("dropdown")){
+		        $(".dropdown dd ul").hide();
+				$(".dropdown dt a").removeClass("selected");
+			}
+
+		});
+	});
+</script>
+<style type="text/css">
+
+	*{
+		padding:0;
+		margin:0;
+	}
+
+	body{
+	    color: #333333;
+	    direction: ltr;
+	    font-family: 
+		"lucida grande",tahoma,verdana,arial,sans-serif;
+	    font-size: 11px;
+	    text-align: left;
+	}
+
+/* Grey Small Dropdown */
+
+/* General dropdown styles */
+.dropdown dl{ margin-left:5px; }
+.dropdown dd, .dropdown dt, .dropdown ul 
+{ margin:0px; padding:0px; }
+.dropdown dd { position:relative; }
+
+/* DT styles for sliding doors */
+.dropdown dt a {background:#EEEEEE 
+url(privacyOff.png) no-repeat scroll right center;
+    display:block; width:40px; height:22px; cursor:pointer;}
+
+.dropdown dt a.selected{
+	background:#EEEEEE url(privacyOn.png) 
+	no-repeat scroll right center;
+}
+.dropdown dt a span {
+cursor:pointer; display:block; padding:5px;}
+
+/* UL styles */
+.dropdown dd ul { 
+background:#EEEEEE none repeat scroll 0 0; display:none;
+    list-style:none; padding:3px 0; position:absolute;
+    left:0px; width:160px; left:auto; right:0; 
+	border:1px solid #656565; cursor:pointer;
+	}
+.dropdown dd ul li{ 
+background-color:#EEEEEE; margin:0; width:160px;
+}
+.dropdown span.value { display:none;}
+.dropdown dd ul li a { 
+display:block; font-weight:normal; width:137px; 
+text-align:left; overflow:hidden; padding:2px 4px 3px 19px; 
+color:#111111; text-decoration:none;
+}
+.dropdown dd ul li a:hover{ 
+background:#656565; color:white; text-decoration:none; 
+}
+.dropdown dd ul li a:visited{ 
+text-decoration:none; 
+}
+</style>
+
+</head>
+
+
+
+
+
+<body>
+
+	<div style="width:500px; margin:auto;">
+		<h1 style="margin:20px 0;">Facebook Dropdown Menus</h1>
+
+		<div style="height:300px;">
+			<div style="width:162px;">
+			    <dl style="" class="dropdown">
+			       <dt>
+				   <a class="" id="linkglobal" 
+				   style="cursor: pointer;"></a></dt>
+					<dd>
+			            <ul style="display: none;" id="ulglobal">
+			                <li><a href="#">Everyone</a></li>
+			                <li><a href="#">Friends</a></li>
+			                <li><a href="#">Only Me</a></li>
+			                <li><a href="#">Customize</a></li>
+			          </ul>
+			       </dd>
+			    </dl>
+			</div>
+		</div>
+
+		<div style="width:162px;">
+		    <dl style="" class="dropdown">
+		       <dt><a class="" id="linkg" style="cursor: pointer;"></a></dt>
+				<dd>
+		            <ul style="display: none;" id="ulg">
+		                <li><a href="#">Everyone</a></li>
+		                <li><a href="#">Friends</a></li>
+		                <li><a href="#">Only Me</a></li>
+		                <li><a href="#">Customize</a></li>
+		          </ul>
+		       </dd>
+		    </dl>
+		</div>
+	</div>
+
+</body></html>

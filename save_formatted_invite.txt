@@ -1,0 +1,73 @@
+<?php
+
+session_start();
+
+include('find_activity_time.php');
+include('select_activity.php');
+include('create_group.php');
+
+include('connectMySQL.php'); // make sure the path is correct
+$db = new MySQLDatabase(); // create a Database object
+$db->connect("ce","ce","meetup");
+
+$activitytypeid = 0;
+if(isset($_REQUEST['id'])) {
+	$activitytypeid = $_REQUEST['id'];
+} else {
+	$activitytypeid = selectActivity();
+}
+
+$query = "insert into meetups values('', 0, '', now(), $activitytypeid)";
+$result = mysql_query($query);
+
+if($result == false) {	
+	die(mysql_error());
+}
+
+$query = "select max(meetupid) from meetups";
+$result = mysql_query($query);
+$row = mysql_fetch_array($result);
+$meetupid = $row[0];
+
+if($result == false) {
+	die(mysql_error());
+}
+
+while(findActivityGroup($meetupid, $activitytypeid, 0) == false) {
+	$activitytypeid = selectActivity();
+}
+
+$query = "select activity.activityid from categories, activity_category, activity where categories.type=activity_category.type and activity_category.activityid=activity.activityid and categories.activitytypeid=$activitytypeid order by activity.popularity desc";
+$result = mysql_query($query);
+
+if($result == false) {
+	die(mysql_error());
+}
+
+$row = mysql_fetch_array($result);
+$activityid = $row[0];
+
+$query = "update meetups set activityid=$activityid where meetupid=$meetupid";
+$result = mysql_query($query);
+
+if($result == false) {
+	die(mysql_error());
+}
+
+$query = "insert into last_n_activities values (" . $_SESSION['home_user'] . "," . $activitytypeid . ", now())";
+$result = mysql_query($query);
+
+if($result == false) {
+	die(mysql_error());
+}
+
+createActivityTime($activityid, 60, $meetupid);
+
+$query = "update user set last_meetup=now() where userid=" . $_SESSION['home_user'];
+$result = mysql_query($query);
+
+$db->disconnect(); 
+
+header('Location: ' . $_SERVER['HTTP_REFERER']);
+
+?>
